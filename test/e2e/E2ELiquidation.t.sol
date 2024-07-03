@@ -60,7 +60,7 @@ contract E2ELiquidation is Common {
   }
 
   function testBuyCollateral1() public {
-    // CAH holds all 185 ether of collateral after liquidation and before auction
+    // CAH holds all 136 ether of collateral after liquidation and before auction
     _logWadCollateralAuctionHouseTokenCollateral(TKN);
     assertEq(safeEngine.tokenCollateral(TKN, address(collateralAuctionHouse[TKN])), DEPOSIT);
 
