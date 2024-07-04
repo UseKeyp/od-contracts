@@ -5,6 +5,7 @@ import {IERC20} from '@openzeppelin/token/ERC20/IERC20.sol';
 import {ODProxy} from '@contracts/proxies/ODProxy.sol';
 import {IVault721} from '@interfaces/proxies/IVault721.sol';
 import {ISAFEEngine} from '@interfaces/ISAFEEngine.sol';
+import {ILiquidationEngine} from '@interfaces/ILiquidationEngine.sol';
 import {IOracleRelayer} from '@interfaces/IOracleRelayer.sol';
 import {Math, RAY} from '@libraries/Math.sol';
 import {DelayedOracleForTest} from '@test/mocks/DelayedOracleForTest.sol';
@@ -14,6 +15,11 @@ uint256 constant MINUS_0_5_PERCENT_PER_HOUR = 999_998_607_628_240_588_157_433_86
 uint256 constant DEPOSIT = 0.5 ether; // $1000 worth of RETH (1 RETH = $2000)
 uint256 constant MINT = 740 ether; // $740 worth of OD (135% over-collateralization)
 uint256 constant USER_AMOUNT = 500 ether;
+uint256 constant ELEVEN_PERCENT = 160 ether;
+uint256 constant FIFTEEN_PERCENT = 218 ether;
+uint256 constant TWENTY_PERCENT = 290 ether;
+uint256 constant THIRTY_PERCENT = 436 ether;
+uint256 constant FORTY_PERCENT = 582 ether;
 
 contract E2ELiquidation is Common {
   using Math for uint256;
@@ -25,6 +31,7 @@ contract E2ELiquidation is Common {
 
   ISAFEEngine.SAFEEngineCollateralData public cTypeData;
   IOracleRelayer.OracleRelayerCollateralParams public oracleParams;
+  ILiquidationEngine.LiquidationEngineCollateralParams public cTypeParams;
 
   IVault721.NFVState public aliceNFV;
   IVault721.NFVState public bobNFV;
@@ -42,6 +49,8 @@ contract E2ELiquidation is Common {
     refreshCData(RETH);
     reth = IERC20(address(collateral[RETH]));
 
+    cTypeParams = liquidationEngine.cParams(RETH);
+
     aliceProxy = userVaultSetup(RETH, alice, USER_AMOUNT, 'AliceProxy');
     aliceNFV = vault721.getNfvState(vaults[aliceProxy]);
     depositCollateralAndGenDebt(RETH, vaults[aliceProxy], DEPOSIT, MINT, aliceProxy);
@@ -53,18 +62,20 @@ contract E2ELiquidation is Common {
     initialSystemCoinSupply = systemCoin.totalSupply();
 
     vm.prank(bob);
-    systemCoin.approve(bobProxy, USER_AMOUNT);
+    systemCoin.approve(bobProxy, type(uint256).max);
   }
 
   function testAssumptions() public {
     assertEq(reth.balanceOf(alice), USER_AMOUNT - DEPOSIT);
     assertEq(reth.balanceOf(bob), USER_AMOUNT - DEPOSIT * 3);
-    assertEq(systemCoin.totalSupply(), 1480 ether);
+    assertEq(systemCoin.totalSupply(), 2960 ether);
+    emitRatio(RETH, aliceNFV.safeHandler); // 135% over-collateralized
     readDelayedPrice(RETH);
-    collateralDevaluation(RETH, 200 ether); // 10% devaulation; 135% => 125% over-collateralization
+    collateralDevaluation(RETH, ELEVEN_PERCENT); // 11% devaulation
     readDelayedPrice(RETH);
-    emitRatio(RETH, aliceNFV.safeHandler);
+    emitRatio(RETH, aliceNFV.safeHandler); // 124% over-collateralized
     liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+    emit log_named_uint('Liquidation    Penalty', cTypeParams.liquidationPenalty);
   }
 
   /**
@@ -79,9 +90,110 @@ contract E2ELiquidation is Common {
    * User deposit $1000 worth of RETH (0.5 ether) and borrows $740 OD (135% ratio)
    *
    */
-  function testLiquidation() public {}
+  function testLiquidation1() public {
+    emitInternalAndExternalCollateralAndDebt();
+
+    collateralDevaluation(RETH, ELEVEN_PERCENT);
+    emitRatio(RETH, aliceNFV.safeHandler);
+    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+
+    emitInternalAndExternalCollateralAndDebt();
+
+    vm.prank(bob);
+    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
+
+    emitInternalAndExternalCollateralAndDebt();
+  }
+
+  function testLiquidation2() public {
+    emitInternalAndExternalCollateralAndDebt();
+
+    collateralDevaluation(RETH, FIFTEEN_PERCENT);
+    emitRatio(RETH, aliceNFV.safeHandler);
+    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+
+    emitInternalAndExternalCollateralAndDebt();
+
+    vm.prank(bob);
+    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
+
+    emitInternalAndExternalCollateralAndDebt();
+  }
+
+  function testLiquidation3() public {
+    emitInternalAndExternalCollateralAndDebt();
+
+    collateralDevaluation(RETH, TWENTY_PERCENT);
+    emitRatio(RETH, aliceNFV.safeHandler);
+    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+
+    emitInternalAndExternalCollateralAndDebt();
+
+    vm.prank(bob);
+    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
+
+    emitInternalAndExternalCollateralAndDebt();
+  }
+
+  function testLiquidation4() public {
+    emitInternalAndExternalCollateralAndDebt();
+
+    collateralDevaluation(RETH, THIRTY_PERCENT);
+    emitRatio(RETH, aliceNFV.safeHandler);
+    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+
+    emitInternalAndExternalCollateralAndDebt();
+
+    vm.prank(bob);
+    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
+
+    emitInternalAndExternalCollateralAndDebt();
+  }
+
+  function testLiquidation5() public {
+    emitInternalAndExternalCollateralAndDebt();
+
+    collateralDevaluation(RETH, FORTY_PERCENT);
+    emitRatio(RETH, aliceNFV.safeHandler);
+    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
+
+    emitInternalAndExternalCollateralAndDebt();
+
+    vm.prank(bob);
+    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
+
+    emitInternalAndExternalCollateralAndDebt();
+  }
 
   // HELPER FUNCTIONS
+  function emitInternalAndExternalCollateralAndDebt() public {
+    emit log_named_uint('CAH  System  Coin  Bal', systemCoin.balanceOf(address(collateralAuctionHouse[RETH])));
+    emit log_named_uint(
+      'CAH Internal cType Bal', safeEngine.tokenCollateral(RETH, address(collateralAuctionHouse[RETH]))
+    );
+    emit log_named_uint('Ali Internal cType Bal', safeEngine.tokenCollateral(RETH, aliceNFV.safeHandler));
+    (uint256 _c, uint256 _d) = getSAFE(RETH, aliceNFV.safeHandler);
+    emit log_named_uint('Ali Locked  cType  Bal', _c);
+    emit log_named_uint('Ali  System  Coin  Bal', systemCoin.balanceOf(alice));
+    emit log_named_uint('Ali Generate Debt  Bal', _d);
+  }
+
+  function getSAFE(bytes32 _cType, address _safe) public view returns (uint256 _collateral, uint256 _debt) {
+    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
+    _collateral = _safeData.lockedCollateral;
+    _debt = _safeData.generatedDebt;
+  }
+
+  function getRatio(bytes32 _cType, uint256 _collateral, uint256 _debt) public view returns (uint256 _ratio) {
+    _ratio = _collateral.wmul(oracleRelayer.cParams(_cType).oracle.read()).wdiv(_debt.wmul(accumulatedRate));
+  }
+
+  function emitRatio(bytes32 _cType, address _safe) public returns (uint256 _ratio) {
+    (uint256 _collateral, uint256 _debt) = getSAFE(_cType, _safe);
+    _ratio = getRatio(_cType, _collateral, _debt);
+    emit log_named_uint('CType  to  Debt  Ratio', _ratio / 1e7);
+  }
+
   function readDelayedPrice(bytes32 _cType) public returns (uint256) {
     uint256 _p = delayedOracle[_cType].read();
     emit log_named_uint('CType  Price   Read', _p);
@@ -177,21 +289,5 @@ contract E2ELiquidation is Common {
     );
     ODProxy(_proxy).execute(address(collateralBidActions), _payload);
     vm.stopPrank();
-  }
-
-  function getSAFE(bytes32 _cType, address _safe) public view returns (uint256 _collateral, uint256 _debt) {
-    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
-    _collateral = _safeData.lockedCollateral;
-    _debt = _safeData.generatedDebt;
-  }
-
-  function getRatio(bytes32 _cType, uint256 _collateral, uint256 _debt) public view returns (uint256 _ratio) {
-    _ratio = _collateral.wmul(oracleRelayer.cParams(_cType).oracle.read()).wdiv(_debt.wmul(accumulatedRate));
-  }
-
-  function emitRatio(bytes32 _cType, address _safe) public returns (uint256 _ratio) {
-    (uint256 _collateral, uint256 _debt) = getSAFE(_cType, _safe);
-    _ratio = getRatio(_cType, _collateral, _debt);
-    emit log_named_uint('CType to Debt Ratio', _ratio);
   }
 }
