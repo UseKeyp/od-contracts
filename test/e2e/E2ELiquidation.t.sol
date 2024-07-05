@@ -91,91 +91,93 @@ contract E2ELiquidation is Common {
    *
    */
   function testLiquidation1() public {
-    emitInternalAndExternalCollateralAndDebt();
-
-    collateralDevaluation(RETH, ELEVEN_PERCENT);
-    emitRatio(RETH, aliceNFV.safeHandler);
-    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
-
-    emitInternalAndExternalCollateralAndDebt();
-
-    vm.prank(bob);
-    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
-
-    emitInternalAndExternalCollateralAndDebt();
+    _percentLiquidation(ELEVEN_PERCENT);
   }
 
   function testLiquidation2() public {
-    emitInternalAndExternalCollateralAndDebt();
-
-    collateralDevaluation(RETH, FIFTEEN_PERCENT);
-    emitRatio(RETH, aliceNFV.safeHandler);
-    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
-
-    emitInternalAndExternalCollateralAndDebt();
-
-    vm.prank(bob);
-    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
-
-    emitInternalAndExternalCollateralAndDebt();
+    _percentLiquidation(FIFTEEN_PERCENT);
   }
 
   function testLiquidation3() public {
-    emitInternalAndExternalCollateralAndDebt();
-
-    collateralDevaluation(RETH, TWENTY_PERCENT);
-    emitRatio(RETH, aliceNFV.safeHandler);
-    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
-
-    emitInternalAndExternalCollateralAndDebt();
-
-    vm.prank(bob);
-    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
-
-    emitInternalAndExternalCollateralAndDebt();
+    _percentLiquidation(TWENTY_PERCENT);
   }
 
   function testLiquidation4() public {
-    emitInternalAndExternalCollateralAndDebt();
-
-    collateralDevaluation(RETH, THIRTY_PERCENT);
-    emitRatio(RETH, aliceNFV.safeHandler);
-    auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
-
-    emitInternalAndExternalCollateralAndDebt();
-
-    vm.prank(bob);
-    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
-
-    emitInternalAndExternalCollateralAndDebt();
+    _percentLiquidation(THIRTY_PERCENT);
   }
 
   function testLiquidation5() public {
-    emitInternalAndExternalCollateralAndDebt();
+    _percentLiquidation(FORTY_PERCENT);
+  }
 
-    collateralDevaluation(RETH, FORTY_PERCENT);
+  function _percentLiquidation(uint256 _percent) public {
+    // read initial values
     emitRatio(RETH, aliceNFV.safeHandler);
+    emitInternalAndExternalCollateralAndDebt();
+
+    // generate amoutToRaise in case of liquidation
+    uint256 _amountToRaise = _emitMathAndReturnAmountToRaise();
+
+    // devalue cType to below the liquidation ratio
+    collateralDevaluation(RETH, _percent);
+    emitRatio(RETH, aliceNFV.safeHandler);
+
+    // liquidate safe
     auctionId = liquidationEngine.liquidateSAFE(RETH, aliceNFV.safeHandler);
-
     emitInternalAndExternalCollateralAndDebt();
 
-    vm.prank(bob);
-    buyCollateral(RETH, auctionId, 0, 1000 ether, bobProxy);
-
+    vm.startPrank(bob);
+    /// bob to buy half of auction @notice token kept in CAH
+    buyCollateral(RETH, auctionId, 0, _amountToRaise / 2, bobProxy);
     emitInternalAndExternalCollateralAndDebt();
+
+    /// bob to buy remaining half of auction @notice token returned to Alice safe
+    buyCollateral(RETH, auctionId, 0, _amountToRaise / 2, bobProxy);
+    emitInternalAndExternalCollateralAndDebt();
+  }
+
+  function _emitMathAndReturnAmountToRaise() public returns (uint256) {
+    ILiquidationEngine.LiquidationEngineCollateralParams memory _rethParams = liquidationEngine.cParams(RETH);
+    ILiquidationEngine.LiquidationEngineParams memory _liqParams = liquidationEngine.params();
+
+    (uint256 _lc, uint256 _gd) = getSAFE(RETH, aliceNFV.safeHandler);
+    uint256 _lq = _rethParams.liquidationQuantity;
+    uint256 _ad =
+      (_liqParams.onAuctionSystemCoinLimit - liquidationEngine.currentOnAuctionSystemCoins()).wdiv(accumulatedRate);
+    uint256 _limitAdjustedDebt = Math.min(_gd, Math.min(_lq, _ad));
+    // emit log_named_uint('Generated   Debt     ', _gd);
+    // emit log_named_uint('Liquidation Quantity ', _lq);
+    // emit log_named_uint('Adjusted    Debt     ', _ad);
+    emit log_named_uint('* Limit Adjusted Debt ', _limitAdjustedDebt);
+
+    uint256 _lcXlad = _lc * _limitAdjustedDebt / _gd;
+    uint256 _collateralToSell = Math.min(_lc, _lcXlad);
+    // emit log_named_uint('Locked Collateral    ', _lc);
+    // emit log_named_uint('Locked C X LimAdjDebt', _lcXlad);
+    emit log_named_uint('* Collateral To Sell  ', _collateralToSell);
+
+    uint256 _amountToRaise = (_limitAdjustedDebt * accumulatedRate).wmul(_rethParams.liquidationPenalty) / 1e27;
+    emit log_named_uint('* Amount     To Raise ', _amountToRaise);
+    return _amountToRaise;
   }
 
   // HELPER FUNCTIONS
   function emitInternalAndExternalCollateralAndDebt() public {
-    emit log_named_uint('CAH  System  Coin  Bal', systemCoin.balanceOf(address(collateralAuctionHouse[RETH])));
+    emit log_named_uint('CAH System   Coin  Bal', systemCoin.balanceOf(address(collateralAuctionHouse[RETH])));
     emit log_named_uint(
       'CAH Internal cType Bal', safeEngine.tokenCollateral(RETH, address(collateralAuctionHouse[RETH]))
     );
-    emit log_named_uint('Ali Internal cType Bal', safeEngine.tokenCollateral(RETH, aliceNFV.safeHandler));
-    (uint256 _c, uint256 _d) = getSAFE(RETH, aliceNFV.safeHandler);
-    emit log_named_uint('Ali Locked  cType  Bal', _c);
-    emit log_named_uint('Ali  System  Coin  Bal', systemCoin.balanceOf(alice));
-    emit log_named_uint('Ali Generate Debt  Bal', _d);
+    emit log_named_uint('Ali Internal CType Bal', safeEngine.tokenCollateral(RETH, aliceNFV.safeHandler));
+    (uint256 _a_c, uint256 _a_d) = getSAFE(RETH, aliceNFV.safeHandler);
+    emit log_named_uint('Ali Locked   CType Bal', _a_c);
+    emit log_named_uint('Ali System   Coin  Bal', systemCoin.balanceOf(alice));
+    emit log_named_uint('Ali Generate Debt  Bal', _a_d);
+    // emit log_named_uint('Bob Internal cType Bal', safeEngine.tokenCollateral(RETH, bobNFV.safeHandler));
+    // (uint256 _b_c, uint256 _b_d) = getSAFE(RETH, bobNFV.safeHandler);
+    // emit log_named_uint('Bob Locked  cType  Bal', _b_c);
+    // emit log_named_uint('Bob  System  Coin  Bal', systemCoin.balanceOf(bob));
+    // emit log_named_uint('Bob Generate Debt  Bal', _b_d);
+    emit log_named_bytes32('BREAK ----------------', bytes32(0x00));
   }
 
   function getSAFE(bytes32 _cType, address _safe) public view returns (uint256 _collateral, uint256 _debt) {
