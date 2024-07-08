@@ -198,7 +198,7 @@ contract E2ELiquidation is Common {
 
   function readDelayedPrice(bytes32 _cType) public returns (uint256) {
     uint256 _p = delayedOracle[_cType].read();
-    emit log_named_uint('CType  Price   Read', _p);
+    emit log_named_uint('CType  Price      Read', _p);
     return _p;
   }
 
