@@ -117,7 +117,7 @@ abstract contract TestParams is Contracts, Params {
 
       _liquidationEngineCParams[_cType] = ILiquidationEngine.LiquidationEngineCollateralParams({
         collateralAuctionHouse: address(collateralAuctionHouse[_cType]),
-        liquidationPenalty: 1.1e18, // WAD
+        liquidationPenalty: 1.05e18, // WAD
         liquidationQuantity: 100_000e45 // RAD
       });
 
