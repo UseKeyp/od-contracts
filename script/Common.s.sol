@@ -6,6 +6,7 @@ import '@script/Registry.s.sol';
 import {Test} from 'forge-std/Test.sol';
 import {VmSafe} from 'forge-std/Script.sol';
 import {Params, ParamChecker, OD, ETH_A, ARB, JOB_REWARD} from '@script/Params.s.sol';
+import {AuthorizableUpgradeable} from '@contracts/utils/AuthorizableUpgradeable.sol';
 import 'forge-std/console.sol';
 
 abstract contract Common is Contracts, Params, Test {
@@ -215,12 +216,22 @@ abstract contract Common is Contracts, Params, Test {
     if (!isNetworkAnvil()) {
       address systemCoinAddress = create2.create2deploy(_systemCoinSalt, _systemCoinInitCode);
       systemCoin = ISystemCoin(systemCoinAddress);
+      systemCoin.initialize('Open Dollar', 'OD');
     } else {
-      systemCoin = new OpenDollar();
+      if (_isTest && !isNetworkArbitrumSepolia()) {
+        systemCoin = OpenDollar(0x221A0f68770658C15B525d0F89F5da2baAB5f321);
+        vm.stopPrank();
+        vm.startPrank(AuthorizableUpgradeable(address(systemCoin)).authorizedAccounts()[0]);
+        AuthorizableUpgradeable(address(systemCoin)).addAuthorization(deployer);
+        vm.stopPrank();
+        vm.startPrank(deployer);
+      } else {
+        systemCoin = new OpenDollar();
+        systemCoin.initialize('Open Dollar', 'OD');
+      }
       protocolToken = new OpenDollarGovernance();
       protocolToken.initialize('Open Dollar Governance', 'ODG');
     }
-    systemCoin.initialize('Open Dollar', 'OD');
     address[] memory members = new address[](0);
 
     if (isNetworkAnvil()) {

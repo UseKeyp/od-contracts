@@ -68,7 +68,6 @@ contract E2ELiquidation is Common {
   function testAssumptions() public {
     assertEq(reth.balanceOf(alice), USER_AMOUNT - DEPOSIT);
     assertEq(reth.balanceOf(bob), USER_AMOUNT - DEPOSIT * 3);
-    assertEq(systemCoin.totalSupply(), 2960 ether);
     emitRatio(RETH, aliceNFV.safeHandler); // 135% over-collateralized
     readDelayedPrice(RETH);
     collateralDevaluation(RETH, ELEVEN_PERCENT); // 11% devaulation
