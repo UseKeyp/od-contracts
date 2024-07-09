@@ -6,7 +6,6 @@ import '@script/Registry.s.sol';
 import {Test} from 'forge-std/Test.sol';
 import {VmSafe} from 'forge-std/Script.sol';
 import {Params, ParamChecker, OD, ETH_A, ARB, JOB_REWARD} from '@script/Params.s.sol';
-import {AuthorizableUpgradeable} from '@contracts/utils/AuthorizableUpgradeable.sol';
 import 'forge-std/console.sol';
 
 abstract contract Common is Contracts, Params, Test {
@@ -18,6 +17,7 @@ abstract contract Common is Contracts, Params, Test {
   bytes internal _systemCoinInitCode;
   bytes internal _vault721InitCode;
   bool internal _isTest;
+  bool internal _isCastTokens;
 
   function logGovernor() public runIfFork {
     emit log_named_address('Governor', tlcGov);
@@ -210,27 +210,21 @@ abstract contract Common is Contracts, Params, Test {
     _contract.addAuthorization(_target);
   }
 
+  // deploy Tokens
   function deployTokenGovernance() public updateParams {
-    // deploy Tokens
-
     if (!isNetworkAnvil()) {
       address systemCoinAddress = create2.create2deploy(_systemCoinSalt, _systemCoinInitCode);
       systemCoin = ISystemCoin(systemCoinAddress);
       systemCoin.initialize('Open Dollar', 'OD');
     } else {
-      if (_isTest && !isNetworkArbitrumSepolia()) {
-        systemCoin = OpenDollar(0x221A0f68770658C15B525d0F89F5da2baAB5f321);
-        vm.stopPrank();
-        vm.startPrank(AuthorizableUpgradeable(address(systemCoin)).authorizedAccounts()[0]);
-        AuthorizableUpgradeable(address(systemCoin)).addAuthorization(deployer);
-        vm.stopPrank();
-        vm.startPrank(deployer);
+      if (_isTest && _isCastTokens) {
+        _castMainnetTokensForTestDeployment();
       } else {
         systemCoin = new OpenDollar();
         systemCoin.initialize('Open Dollar', 'OD');
+        protocolToken = new OpenDollarGovernance();
+        protocolToken.initialize('Open Dollar Governance', 'ODG');
       }
-      protocolToken = new OpenDollarGovernance();
-      protocolToken.initialize('Open Dollar Governance', 'ODG');
     }
     address[] memory members = new address[](0);
 
@@ -308,6 +302,27 @@ abstract contract Common is Contracts, Params, Test {
 
     settlementSurplusAuctioneer =
       new SettlementSurplusAuctioneer(address(accountingEngine), address(postSettlementSurplusAuctionHouse));
+  }
+
+  function _castMainnetTokensForTestDeployment() public {
+    /// @notice cast real systemCoin and protocolToken to test-fork deployment
+    systemCoin = OpenDollar(MAINNET_SYSTEM_COIN);
+    protocolToken = OpenDollarGovernance(MAINNET_PROTOCOL_TOKEN);
+    // pause current prank of test-fork deployment
+    vm.stopPrank();
+
+    // prank with authorized account to add authorization to deployer on systemCoin
+    vm.startPrank(IAuthorizable(systemCoin).authorizedAccounts()[0]);
+    IAuthorizable(systemCoin).addAuthorization(deployer);
+    vm.stopPrank();
+
+    // prank with authorized account to add authorization to deployer on protocolToken
+    vm.startPrank(IAuthorizable(protocolToken).authorizedAccounts()[0]);
+    IAuthorizable(protocolToken).addAuthorization(deployer);
+    vm.stopPrank();
+
+    // un-pause current prank of test-fork deployment
+    vm.startPrank(deployer);
   }
 
   function _setupGlobalSettlement() internal {

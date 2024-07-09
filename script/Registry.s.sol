@@ -81,6 +81,8 @@ address constant MAINNET_SYSTEM_COIN_ORACLE = 0x0Cb5313C825d0F00e9708BA54D906E89
 
 // Protocol Token
 address constant MAINNET_PROTOCOL_TOKEN = 0x000D636bD52BFc1B3a699165Ef5aa340BEA8939c;
+// System Coin
+address constant MAINNET_SYSTEM_COIN = 0x221A0f68770658C15B525d0F89F5da2baAB5f321;
 
 // Governance Settings
 uint256 constant MAINNET_INIT_VOTING_DELAY = 3600; // 12 hours in blocks
