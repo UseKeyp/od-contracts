@@ -43,15 +43,13 @@ import {ILiquidationJob} from '@contracts/jobs/LiquidationJob.sol';
 import {IOracleJob} from '@contracts/jobs/OracleJob.sol';
 
 // --- Proxy Contracts ---
-import {BasicActions, CommonActions} from '@contracts/proxies/actions/BasicActions.sol';
-import {DebtBidActions} from '@contracts/proxies/actions/DebtBidActions.sol';
-import {SurplusBidActions} from '@contracts/proxies/actions/SurplusBidActions.sol';
-import {CollateralBidActions} from '@contracts/proxies/actions/CollateralBidActions.sol';
+import {IBasicActions} from '@contracts/proxies/actions/BasicActions.sol';
+import {IDebtBidActions} from '@contracts/proxies/actions/DebtBidActions.sol';
+import {ISurplusBidActions} from '@contracts/proxies/actions/SurplusBidActions.sol';
+import {ICollateralBidActions} from '@contracts/proxies/actions/CollateralBidActions.sol';
 import {PostSettlementSurplusBidActions} from '@contracts/proxies/actions/PostSettlementSurplusBidActions.sol';
-import {GlobalSettlementActions} from '@contracts/proxies/actions/GlobalSettlementActions.sol';
-import {RewardedActions} from '@contracts/proxies/actions/RewardedActions.sol';
-import {GlobalSettlementActions} from '@contracts/proxies/actions/GlobalSettlementActions.sol';
-import {PostSettlementSurplusBidActions} from '@contracts/proxies/actions/PostSettlementSurplusBidActions.sol';
+import {IGlobalSettlementActions} from '@contracts/proxies/actions/GlobalSettlementActions.sol';
+import {IRewardedActions} from '@contracts/proxies/actions/RewardedActions.sol';
 import {IODSafeManager} from '@contracts/proxies/ODSafeManager.sol';
 import {IVault721} from '@contracts/proxies/Vault721.sol';
 import {NFTRenderer} from '@contracts/proxies/NFTRenderer.sol';
@@ -187,29 +185,29 @@ library OpenDollarV1Arbitrum {
   NFTRenderer internal constant NFT_RENDERER = NFTRenderer(0xFDB6935CF3A6441f83adF60CF5C9bf89A4fd7681);
 
   /// @dev Basic Actions (inherit Common Actions)
-  BasicActions internal constant BASIC_ACTIONS = BasicActions(0x688CFd8024ba60030fE4D669fd45D914A82933db);
+  IBasicActions internal constant BASIC_ACTIONS = IBasicActions(0x688CFd8024ba60030fE4D669fd45D914A82933db);
 
   /// @dev Debt Bid Actions
-  DebtBidActions internal constant DEBT_BID_ACTIONS = DebtBidActions(0x490CEDC57E1D2409F111C6a6Db75AC6A7Fc45E4a);
+  IDebtBidActions internal constant DEBT_BID_ACTIONS = IDebtBidActions(0x490CEDC57E1D2409F111C6a6Db75AC6A7Fc45E4a);
 
   /// @dev Surplus Bid Actions
-  SurplusBidActions internal constant SURPLUS_BID_ACTIONS =
-    SurplusBidActions(0x8F43FdD337C0A84f0d00C70F3c4E6A4E52A84C7E);
+  ISurplusBidActions internal constant SURPLUS_BID_ACTIONS =
+    ISurplusBidActions(0x8F43FdD337C0A84f0d00C70F3c4E6A4E52A84C7E);
 
   /// @dev Collateral Bid Actions
-  CollateralBidActions internal constant COLLATERAL_BID_ACTIONS =
-    CollateralBidActions(0xb60772EDb81a143D98c4aB0bD1C671a5E5184179);
+  ICollateralBidActions internal constant COLLATERAL_BID_ACTIONS =
+    ICollateralBidActions(0xb60772EDb81a143D98c4aB0bD1C671a5E5184179);
 
   /// @dev Post-Settlement Bid Actions for Global Shutdown Event
   PostSettlementSurplusBidActions internal constant POSTSETTLEMENT_SURPLUS_BID_ACTIONS =
     PostSettlementSurplusBidActions(0x2B7F191E4FdCf4E354f344349302BC3E98780044);
 
   /// @dev Global Settlement Actions for Global Shutdown Event
-  GlobalSettlementActions internal constant GLOBAL_SETTLEMENT_ACTIONS =
-    GlobalSettlementActions(0xBB935d412DFab5200D01B1fcaF2aa14Af5b5b2ED);
+  IGlobalSettlementActions internal constant GLOBAL_SETTLEMENT_ACTIONS =
+    IGlobalSettlementActions(0xBB935d412DFab5200D01B1fcaF2aa14Af5b5b2ED);
 
   /// @dev Rewarded Actions
-  RewardedActions internal constant REWARDED_ACTIONS = RewardedActions(0xD51fD52C5BCC150491d1e629094a3A56B7194096);
+  IRewardedActions internal constant REWARDED_ACTIONS = IRewardedActions(0xD51fD52C5BCC150491d1e629094a3A56B7194096);
 
   /// @dev Deploy Chainlink Oracles
   IChainlinkRelayerFactory internal constant CHAINLINK_RELAYER_FACTORY =
