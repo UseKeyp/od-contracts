@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.20;
 
-import 'forge-std/Test.sol';
-import '@script/Registry.s.sol';
-import {OpenDollarV1Arbitrum} from '@libraries/OpenDollarV1Arbitrum.sol';
-import {ISystemCoin} from '@contracts/tokens/SystemCoin.sol';
-import {IProtocolToken} from '@contracts/tokens/ProtocolToken.sol';
-import {ISAFEEngine} from '@contracts/SAFEEngine.sol';
-import {IODSafeManager} from '@contracts/proxies/ODSafeManager.sol';
-import {IVault721} from '@contracts/proxies/Vault721.sol';
+import {Test} from 'forge-std/Test.sol';
+import {MAINNET_PROTOCOL_TOKEN} from '@script/Registry.s.sol';
+import {
+  OpenDollarV1Arbitrum,
+  ISystemCoin,
+  IProtocolToken,
+  ISAFEEngine,
+  IODSafeManager,
+  IVault721
+} from '@libraries/OpenDollarV1Arbitrum.sol';
 
 contract ODLib is Test {
   ISystemCoin public systemCoin;
