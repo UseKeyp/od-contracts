@@ -171,12 +171,7 @@ contract E2ELiquidation is Common {
     emit log_named_uint('Ali Locked   CType Bal', _a_c);
     emit log_named_uint('Ali System   Coin  Bal', systemCoin.balanceOf(alice));
     emit log_named_uint('Ali Generate Debt  Bal', _a_d);
-    // emit log_named_uint('Bob Internal cType Bal', safeEngine.tokenCollateral(RETH, bobNFV.safeHandler));
-    // (uint256 _b_c, uint256 _b_d) = getSAFE(RETH, bobNFV.safeHandler);
-    // emit log_named_uint('Bob Locked  cType  Bal', _b_c);
-    // emit log_named_uint('Bob  System  Coin  Bal', systemCoin.balanceOf(bob));
-    // emit log_named_uint('Bob Generate Debt  Bal', _b_d);
-    emit log_named_bytes32('BREAK ----------------', bytes32(0x00));
+    emit log_named_uint('----------------------', 0);
   }
 
   function getSAFE(bytes32 _cType, address _safe) public view returns (uint256 _collateral, uint256 _debt) {
