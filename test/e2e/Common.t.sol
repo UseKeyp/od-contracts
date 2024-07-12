@@ -79,12 +79,14 @@ contract DeployForTest is TestParams, Deploy {
  * @dev    Used to be inherited by different test contracts with different scopes
  */
 abstract contract Common is DeployForTest, ODTest {
-  address alice = address(0x420);
-  address bob = address(0x421);
-  address carol = address(0x422);
-  address dave = address(0x423);
+  address public alice = address(0x420);
+  address public bob = address(0x421);
+  address public carol = address(0x422);
+  address public dave = address(0x423);
 
-  uint256 auctionId;
+  uint256 public auctionId;
+
+  mapping(address proxy => uint256 safeId) public vaults;
 
   function setUp() public virtual {
     run();
@@ -120,12 +122,7 @@ abstract contract Common is DeployForTest, ODTest {
     taxCollector.taxSingle(_cType);
   }
 
-  // Extra Test Setup Helper Functions
-  function getSAFE(bytes32 _cType, address _safe) public view virtual returns (uint256 _collateral, uint256 _debt) {
-    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
-    _collateral = _safeData.lockedCollateral;
-    _debt = _safeData.generatedDebt;
-  }
+  /// @dev Extra Test Setup Helper Functions
 
   function deployOrFind(address _owner) public virtual returns (address) {
     address proxy = vault721.getProxy(_owner);
@@ -134,6 +131,30 @@ abstract contract Common is DeployForTest, ODTest {
     } else {
       return proxy;
     }
+  }
+
+  function openSafe(address _proxy, bytes32 _cType) public virtual {
+    vm.prank(_proxy);
+    vaults[_proxy] = safeManager.openSAFE(_cType, _proxy);
+  }
+
+  function userVaultSetup(
+    bytes32 _cType,
+    address _user,
+    uint256 _amount,
+    string memory _name
+  ) public virtual returns (address _proxy) {
+    _proxy = deployOrFind(_user);
+    mintToken(_cType, _user, _amount, _proxy);
+    vm.label(_proxy, _name);
+    vm.prank(_proxy);
+    vaults[_proxy] = safeManager.openSAFE(_cType, _proxy);
+  }
+
+  function getSAFE(bytes32 _cType, address _safe) public view virtual returns (uint256 _collateral, uint256 _debt) {
+    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
+    _collateral = _safeData.lockedCollateral;
+    _debt = _safeData.generatedDebt;
   }
 
   function depositCollateralAndGenDebt(

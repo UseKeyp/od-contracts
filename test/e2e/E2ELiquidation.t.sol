@@ -41,8 +41,6 @@ contract E2ELiquidation is Common {
 
   IERC20 public reth;
 
-  mapping(address proxy => uint256 safeId) public vaults;
-
   function setUp() public virtual override {
     super.setUp();
     refreshCData(RETH);
@@ -205,18 +203,5 @@ contract E2ELiquidation is Common {
     oracleParams = oracleRelayer.cParams(_cType);
     liquidationCRatio = oracleParams.liquidationCRatio;
     safetyCRatio = oracleParams.safetyCRatio;
-  }
-
-  function userVaultSetup(
-    bytes32 _cType,
-    address _user,
-    uint256 _amount,
-    string memory _name
-  ) public returns (address _proxy) {
-    _proxy = deployOrFind(_user);
-    mintToken(_cType, _user, _amount, _proxy);
-    vm.label(_proxy, _name);
-    vm.prank(_proxy);
-    vaults[_proxy] = safeManager.openSAFE(_cType, _proxy);
   }
 }
