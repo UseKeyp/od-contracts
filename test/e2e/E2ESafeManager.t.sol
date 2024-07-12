@@ -161,15 +161,6 @@ abstract contract E2ESafeManagerSetUp is Base_CType, BasicActionsForE2ETests {
     _token.approve(address(aliceProxy), type(uint256).max);
   }
 
-  // function deployOrFind(address owner) public returns (address payable) {
-  //   address proxy = vault721.getProxy(owner);
-  //   if (proxy == address(0)) {
-  //     return vault721.build(owner);
-  //   } else {
-  //     return payable(address(proxy));
-  //   }
-  // }
-
   function _cType() internal pure override returns (bytes32) {
     return TKN;
   }
