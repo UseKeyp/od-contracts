@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import {IERC20} from '@openzeppelin/token/ERC20/IERC20.sol';
-import {ODProxy} from '@contracts/proxies/ODProxy.sol';
 import {IVault721} from '@interfaces/proxies/IVault721.sol';
 import {ISAFEEngine} from '@interfaces/ISAFEEngine.sol';
 import {ILiquidationEngine} from '@interfaces/ILiquidationEngine.sol';
@@ -174,12 +173,6 @@ contract E2ELiquidation is Common {
     emit log_named_uint('----------------------', 0);
   }
 
-  function getSAFE(bytes32 _cType, address _safe) public view returns (uint256 _collateral, uint256 _debt) {
-    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
-    _collateral = _safeData.lockedCollateral;
-    _debt = _safeData.generatedDebt;
-  }
-
   function getRatio(bytes32 _cType, uint256 _collateral, uint256 _debt) public view returns (uint256 _ratio) {
     _ratio = _collateral.wmul(oracleRelayer.cParams(_cType).oracle.read()).wdiv(_debt.wmul(accumulatedRate));
   }
@@ -225,65 +218,5 @@ contract E2ELiquidation is Common {
     vm.label(_proxy, _name);
     vm.prank(_proxy);
     vaults[_proxy] = safeManager.openSAFE(_cType, _proxy);
-  }
-
-  function mintToken(bytes32 _cType, address _account, uint256 _amount, address _okAccount) public {
-    vm.startPrank(_account);
-    deal(address(collateral[_cType]), _account, _amount);
-    if (_okAccount != address(0)) {
-      IERC20(address(collateral[_cType])).approve(_okAccount, _amount);
-    }
-    vm.stopPrank();
-  }
-
-  function deployOrFind(address _owner) public returns (address) {
-    address proxy = vault721.getProxy(_owner);
-    if (proxy == address(0)) {
-      return address(vault721.build(_owner));
-    } else {
-      return proxy;
-    }
-  }
-
-  function depositCollateralAndGenDebt(
-    bytes32 _cType,
-    uint256 _safeId,
-    uint256 _collatAmount,
-    uint256 _deltaWad,
-    address _proxy
-  ) public {
-    vm.startPrank(ODProxy(_proxy).OWNER());
-    bytes memory _payload = abi.encodeWithSelector(
-      basicActions.lockTokenCollateralAndGenerateDebt.selector,
-      address(safeManager),
-      address(collateralJoin[_cType]),
-      address(coinJoin),
-      _safeId,
-      _collatAmount,
-      _deltaWad
-    );
-    ODProxy(_proxy).execute(address(basicActions), _payload);
-    vm.stopPrank();
-  }
-
-  function buyCollateral(
-    bytes32 _cType,
-    uint256 _auctionId,
-    uint256 _minCollateral,
-    uint256 _bid,
-    address _proxy
-  ) public {
-    vm.startPrank(ODProxy(_proxy).OWNER());
-    bytes memory _payload = abi.encodeWithSelector(
-      collateralBidActions.buyCollateral.selector,
-      address(coinJoin),
-      address(collateralJoin[_cType]),
-      address(collateralAuctionHouse[_cType]),
-      _auctionId,
-      _minCollateral,
-      _bid
-    );
-    ODProxy(_proxy).execute(address(collateralBidActions), _payload);
-    vm.stopPrank();
   }
 }

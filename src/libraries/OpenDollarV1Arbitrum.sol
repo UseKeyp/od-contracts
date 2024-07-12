@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0;
 
+import {IERC20Metadata} from '@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol';
+
 // --- Base Contracts ---
 import {ISystemCoin} from '@contracts/tokens/SystemCoin.sol';
 import {IProtocolToken} from '@contracts/tokens/ProtocolToken.sol';
@@ -219,4 +221,10 @@ library OpenDollarV1Arbitrum {
 
   /// @dev Deploy Camelot Oracles (interface in od-relayer repo)
   address internal constant CAMELOT_RELAYER_FACTORY = 0x36645830479170265A154Acb726780fdaE41A28F;
+
+  /// @dev Collateral IERC20Metadata Tokens
+  IERC20Metadata internal constant WETH = IERC20Metadata(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+  IERC20Metadata internal constant WSTETH = IERC20Metadata(0x5979D7b546E38E414F7E9822514be443A4800529);
+  IERC20Metadata internal constant RETH = IERC20Metadata(0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8);
+  IERC20Metadata internal constant ARB = IERC20Metadata(0x912CE59144191C1204E64559FE8253a0e49E6548);
 }

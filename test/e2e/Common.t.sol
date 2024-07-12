@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.20;
 
-import {MAINNET_WETH, SEPOLIA_WETH} from '@script/Registry.s.sol';
-import {ODTest} from '@test/utils/ODTest.t.sol';
-import {OD, OD_INITIAL_PRICE, ETH_A} from '@script/Params.s.sol';
+import '@script/Registry.s.sol';
+import {IERC20} from '@openzeppelin/token/ERC20/IERC20.sol';
+import {OD_INITIAL_PRICE} from '@script/Params.s.sol';
 import {Deploy} from '@script/Deploy.s.sol';
+import {
+  Contracts, ICollateralJoin, MintableERC20, IERC20Metadata, IBaseOracle, ISAFEEngine
+} from '@script/Contracts.s.sol';
+import {ODProxy} from '@contracts/proxies/ODProxy.sol';
+import {IDelayedOracle} from '@interfaces/oracles/IDelayedOracle.sol';
+import {Math, RAY} from '@libraries/Math.sol';
+import {ODTest} from '@test/utils/ODTest.t.sol';
 import {TestParams, WSTETH, RETH, ARB, WETH, TKN, TEST_ETH_PRICE, TEST_TKN_PRICE} from '@test/e2e/TestParams.t.sol';
 import {ERC20ForTest} from '@test/mocks/ERC20ForTest.sol';
 import {OracleForTest} from '@test/mocks/OracleForTest.sol';
 import {DelayedOracleForTest} from '@test/mocks/DelayedOracleForTest.sol';
-import {
-  Contracts, ICollateralJoin, MintableERC20, IERC20Metadata, IBaseOracle, ISAFEEngine
-} from '@script/Contracts.s.sol';
-import {WETH9} from '@test/mocks/WETH9.sol';
-import {Math, RAY} from '@libraries/Math.sol';
-
-import {IDelayedOracle} from '@interfaces/oracles/IDelayedOracle.sol';
 
 uint256 constant RAD_DELTA = 0.0001e45;
 uint256 constant COLLATERAL_PRICE = 100e18;
@@ -36,8 +36,6 @@ contract DeployForTest is TestParams, Deploy {
   }
 
   function setupEnvironment() public virtual override {
-    WETH9 weth = WETH9(payable(MAINNET_WETH));
-
     systemCoinOracle = new OracleForTest(OD_INITIAL_PRICE); // 1 OD = 1 USD
 
     collateral[WETH] = IERC20Metadata(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
@@ -120,5 +118,72 @@ abstract contract Common is DeployForTest, ODTest {
   function _collectFees(bytes32 _cType, uint256 _timeToWarp) internal {
     vm.warp(block.timestamp + _timeToWarp);
     taxCollector.taxSingle(_cType);
+  }
+
+  // Extra Test Setup Helper Functions
+  function getSAFE(bytes32 _cType, address _safe) public view virtual returns (uint256 _collateral, uint256 _debt) {
+    ISAFEEngine.SAFE memory _safeData = safeEngine.safes(_cType, _safe);
+    _collateral = _safeData.lockedCollateral;
+    _debt = _safeData.generatedDebt;
+  }
+
+  function deployOrFind(address _owner) public virtual returns (address) {
+    address proxy = vault721.getProxy(_owner);
+    if (proxy == address(0)) {
+      return address(vault721.build(_owner));
+    } else {
+      return proxy;
+    }
+  }
+
+  function depositCollateralAndGenDebt(
+    bytes32 _cType,
+    uint256 _safeId,
+    uint256 _collatAmount,
+    uint256 _deltaWad,
+    address _proxy
+  ) public virtual {
+    vm.startPrank(ODProxy(_proxy).OWNER());
+    bytes memory _payload = abi.encodeWithSelector(
+      basicActions.lockTokenCollateralAndGenerateDebt.selector,
+      address(safeManager),
+      address(collateralJoin[_cType]),
+      address(coinJoin),
+      _safeId,
+      _collatAmount,
+      _deltaWad
+    );
+    ODProxy(_proxy).execute(address(basicActions), _payload);
+    vm.stopPrank();
+  }
+
+  function buyCollateral(
+    bytes32 _cType,
+    uint256 _auctionId,
+    uint256 _minCollateral,
+    uint256 _bid,
+    address _proxy
+  ) public virtual {
+    vm.startPrank(ODProxy(_proxy).OWNER());
+    bytes memory _payload = abi.encodeWithSelector(
+      collateralBidActions.buyCollateral.selector,
+      address(coinJoin),
+      address(collateralJoin[_cType]),
+      address(collateralAuctionHouse[_cType]),
+      _auctionId,
+      _minCollateral,
+      _bid
+    );
+    ODProxy(_proxy).execute(address(collateralBidActions), _payload);
+    vm.stopPrank();
+  }
+
+  function mintToken(bytes32 _cType, address _account, uint256 _amount, address _okAccount) public virtual {
+    vm.startPrank(_account);
+    deal(address(collateral[_cType]), _account, _amount);
+    if (_okAccount != address(0)) {
+      IERC20(address(collateral[_cType])).approve(_okAccount, _amount);
+    }
+    vm.stopPrank();
   }
 }
