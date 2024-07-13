@@ -41,15 +41,6 @@ contract NFTSetup is Common {
     debtCeiling = params.safeDebtCeiling;
   }
 
-  function deployOrFind(address owner) public returns (address) {
-    address proxy = vault721.getProxy(owner);
-    if (proxy == address(0)) {
-      return address(vault721.build(owner));
-    } else {
-      return proxy;
-    }
-  }
-
   function depositCollatAndGenDebt(
     bytes32 _cType,
     uint256 _safeId,

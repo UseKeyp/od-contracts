@@ -53,12 +53,7 @@ abstract contract E2ETest is BaseUser, Base_CType, Common, IERC721Receiver {
     taxCollector.taxSingle(_cType());
   }
 
-  function onERC721Received(
-    address operator,
-    address from,
-    uint256 tokenId,
-    bytes calldata data
-  ) external returns (bytes4) {
+  function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
     return IERC721Receiver.onERC721Received.selector;
   }
 
