@@ -456,14 +456,7 @@ contract E2ESafeManagerTest_TransferCollateral is E2ESafeManagerSetUp {
     depositCollatAndGenDebt(_cType(), aliceSafeId, _scenario.lockedCollateral, 0, aliceProxy);
     modifySAFECollateralization(aliceProxy, aliceSafeId, -int256(_scenario.lockedCollateral), 0);
     vm.stopPrank();
-    bytes memory payload = abi.encodeWithSelector(
-      basicActions.transferCollateralWithCType.selector,
-      address(safeManager),
-      _cType(),
-      aliceSafeId,
-      bob,
-      _scenario.lockedCollateral
-    );
+
     vm.prank(bob);
     vm.expectRevert(IODSafeManager.SafeNotAllowed.selector);
     safeManager.transferCollateral(_cType(), aliceSafeId, bob, _scenario.lockedCollateral);

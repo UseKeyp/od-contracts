@@ -20,7 +20,7 @@ import {IProtocolToken} from '@contracts/tokens/ProtocolToken.sol';
 
 abstract contract CommonDeploymentTest is ODTest, Deploy {
   // SAFEEngine
-  function test_SAFEEngine_Auth() public {
+  function test_SAFEEngine_Auth() public view {
     assertEq(safeEngine.authorizedAccounts(address(oracleRelayer)), true);
     assertEq(safeEngine.authorizedAccounts(address(taxCollector)), true);
     assertEq(safeEngine.authorizedAccounts(address(debtAuctionHouse)), true);
@@ -34,12 +34,12 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
   }
 
   // OracleRelayer
-  function test_OracleRelayer_Auth() public {
+  function test_OracleRelayer_Auth() public view {
     assertEq(oracleRelayer.authorizedAccounts(address(pidRateSetter)), true);
   }
 
   // AccountingEngine
-  function test_AccountingEngine_Auth() public {
+  function test_AccountingEngine_Auth() public view {
     assertEq(accountingEngine.authorizedAccounts(address(liquidationEngine)), true);
   }
 
@@ -48,17 +48,17 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
   }
 
   // SystemCoin
-  function test_SystemCoin_Auth() public {
+  function test_SystemCoin_Auth() public view {
     assertEq(systemCoin.authorizedAccounts(address(coinJoin)), true);
   }
 
   // ProtocolToken
-  function test_ProtocolToken_Auth() public {
+  function test_ProtocolToken_Auth() public view {
     assertEq(protocolToken.authorizedAccounts(address(debtAuctionHouse)), true);
   }
 
   // SurplusAuctionHouse
-  function test_SurplusAuctionHouse_Auth() public {
+  function test_SurplusAuctionHouse_Auth() public view {
     assertEq(surplusAuctionHouse.authorizedAccounts(address(accountingEngine)), true);
   }
 
@@ -67,7 +67,7 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
   }
 
   // DebtAuctionHouse
-  function test_DebtAuctionHouse_Auth() public {
+  function test_DebtAuctionHouse_Auth() public view {
     assertEq(debtAuctionHouse.authorizedAccounts(address(accountingEngine)), true);
   }
 
@@ -76,7 +76,7 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
   }
 
   // CollateralAuctionHouse
-  function test_CollateralAuctionHouse_Auth() public {
+  function test_CollateralAuctionHouse_Auth() public view {
     for (uint256 _i; _i < collateralTypes.length; _i++) {
       bytes32 _cType = collateralTypes[_i];
       assertEq(collateralAuctionHouse[_cType].authorizedAccounts(address(liquidationEngine)), true);
@@ -92,7 +92,7 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
     }
   }
 
-  function test_Grant_Auth() public {
+  function test_Grant_Auth() public view {
     uint256 _id;
     assembly {
       _id := chainid()
@@ -112,7 +112,7 @@ abstract contract CommonDeploymentTest is ODTest, Deploy {
     }
   }
 
-  function _test_Authorizations(address _target, bool _permission) internal {
+  function _test_Authorizations(address _target, bool _permission) internal view {
     // base contracts
     assertEq(safeEngine.authorizedAccounts(_target), _permission);
     assertEq(oracleRelayer.authorizedAccounts(_target), _permission);

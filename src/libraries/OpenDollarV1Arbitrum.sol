@@ -4,54 +4,54 @@ pragma solidity >=0.7.0;
 import {IERC20Metadata} from '@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol';
 
 // --- Base Contracts ---
-import {ISystemCoin} from '@contracts/tokens/SystemCoin.sol';
-import {IProtocolToken} from '@contracts/tokens/ProtocolToken.sol';
-import {ISAFEEngine} from '@contracts/SAFEEngine.sol';
-import {ITaxCollector} from '@contracts/TaxCollector.sol';
-import {IAccountingEngine} from '@contracts/AccountingEngine.sol';
-import {ILiquidationEngine} from '@contracts/LiquidationEngine.sol';
-import {ISurplusAuctionHouse} from '@contracts/SurplusAuctionHouse.sol';
-import {IDebtAuctionHouse} from '@contracts/DebtAuctionHouse.sol';
-import {ICollateralAuctionHouse} from '@contracts/CollateralAuctionHouse.sol';
-import {IStabilityFeeTreasury} from '@contracts/StabilityFeeTreasury.sol';
-import {IPIDController} from '@contracts/PIDController.sol';
-import {IPIDRateSetter} from '@contracts/PIDRateSetter.sol';
+import {ISystemCoin} from '@interfaces/tokens/ISystemCoin.sol';
+import {IProtocolToken} from '@interfaces/tokens/IProtocolToken.sol';
+import {ISAFEEngine} from '@interfaces/ISAFEEngine.sol';
+import {ITaxCollector} from '@interfaces/ITaxCollector.sol';
+import {IAccountingEngine} from '@interfaces/IAccountingEngine.sol';
+import {ILiquidationEngine} from '@interfaces/ILiquidationEngine.sol';
+import {ISurplusAuctionHouse} from '@interfaces/ISurplusAuctionHouse.sol';
+import {IDebtAuctionHouse} from '@interfaces/IDebtAuctionHouse.sol';
+import {ICollateralAuctionHouse} from '@interfaces/ICollateralAuctionHouse.sol';
+import {IStabilityFeeTreasury} from '@interfaces/IStabilityFeeTreasury.sol';
+import {IPIDController} from '@interfaces/IPIDController.sol';
+import {IPIDRateSetter} from '@interfaces/IPIDRateSetter.sol';
 
 // --- Settlement ---
-import {IGlobalSettlement} from '@contracts/settlement/GlobalSettlement.sol';
-import {IPostSettlementSurplusAuctionHouse} from '@contracts/settlement/PostSettlementSurplusAuctionHouse.sol';
-import {ISettlementSurplusAuctioneer} from '@contracts/settlement/SettlementSurplusAuctioneer.sol';
+import {IGlobalSettlement} from '@interfaces/settlement/IGlobalSettlement.sol';
+import {IPostSettlementSurplusAuctionHouse} from '@interfaces/settlement/IPostSettlementSurplusAuctionHouse.sol';
+import {ISettlementSurplusAuctioneer} from '@interfaces/settlement/ISettlementSurplusAuctioneer.sol';
 
 // --- Oracles ---
-import {IOracleRelayer} from '@contracts/OracleRelayer.sol';
-import {IDelayedOracle} from '@contracts/oracles/DelayedOracle.sol';
+import {IOracleRelayer} from '@interfaces/IOracleRelayer.sol';
+import {IDelayedOracle} from '@interfaces/oracles/IDelayedOracle.sol';
 
 // --- Token adapters ---
-import {ICoinJoin} from '@contracts/utils/CoinJoin.sol';
-import {ICollateralJoin} from '@contracts/utils/CollateralJoin.sol';
+import {ICoinJoin} from '@interfaces/utils/ICoinJoin.sol';
+import {ICollateralJoin} from '@interfaces/utils/ICollateralJoin.sol';
 
 // --- Factories ---
-import {ICollateralJoinFactory} from '@contracts/factories/CollateralJoinFactory.sol';
-import {ICollateralAuctionHouseFactory} from '@contracts/factories/CollateralAuctionHouseFactory.sol';
-import {IChainlinkRelayerFactory} from '@contracts/factories/ChainlinkRelayerFactory.sol';
-import {IDenominatedOracleFactory} from '@contracts/factories/DenominatedOracleFactory.sol';
-import {IDelayedOracleFactory} from '@contracts/factories/DelayedOracleFactory.sol';
+import {ICollateralJoinFactory} from '@interfaces/factories/ICollateralJoinFactory.sol';
+import {ICollateralAuctionHouseFactory} from '@interfaces/factories/ICollateralAuctionHouseFactory.sol';
+import {IChainlinkRelayerFactory} from '@interfaces/factories/IChainlinkRelayerFactory.sol';
+import {IDenominatedOracleFactory} from '@interfaces/factories/IDenominatedOracleFactory.sol';
+import {IDelayedOracleFactory} from '@interfaces/factories/IDelayedOracleFactory.sol';
 
 // --- Jobs ---
-import {IAccountingJob} from '@contracts/jobs/AccountingJob.sol';
-import {ILiquidationJob} from '@contracts/jobs/LiquidationJob.sol';
-import {IOracleJob} from '@contracts/jobs/OracleJob.sol';
+import {IAccountingJob} from '@interfaces/jobs/IAccountingJob.sol';
+import {ILiquidationJob} from '@interfaces/jobs/ILiquidationJob.sol';
+import {IOracleJob} from '@interfaces/jobs/IOracleJob.sol';
 
 // --- Proxy Contracts ---
-import {IBasicActions} from '@contracts/proxies/actions/BasicActions.sol';
-import {IDebtBidActions} from '@contracts/proxies/actions/DebtBidActions.sol';
-import {ISurplusBidActions} from '@contracts/proxies/actions/SurplusBidActions.sol';
-import {ICollateralBidActions} from '@contracts/proxies/actions/CollateralBidActions.sol';
+import {IBasicActions} from '@interfaces/proxies/actions/IBasicActions.sol';
+import {IDebtBidActions} from '@interfaces/proxies/actions/IDebtBidActions.sol';
+import {ISurplusBidActions} from '@interfaces/proxies/actions/ISurplusBidActions.sol';
+import {ICollateralBidActions} from '@interfaces/proxies/actions/ICollateralBidActions.sol';
 import {PostSettlementSurplusBidActions} from '@contracts/proxies/actions/PostSettlementSurplusBidActions.sol';
-import {IGlobalSettlementActions} from '@contracts/proxies/actions/GlobalSettlementActions.sol';
-import {IRewardedActions} from '@contracts/proxies/actions/RewardedActions.sol';
-import {IODSafeManager} from '@contracts/proxies/ODSafeManager.sol';
-import {IVault721} from '@contracts/proxies/Vault721.sol';
+import {IGlobalSettlementActions} from '@interfaces/proxies/actions/IGlobalSettlementActions.sol';
+import {IRewardedActions} from '@interfaces/proxies/actions/IRewardedActions.sol';
+import {IODSafeManager} from '@interfaces/proxies/IODSafeManager.sol';
+import {IVault721} from '@interfaces/proxies/IVault721.sol';
 import {NFTRenderer} from '@contracts/proxies/NFTRenderer.sol';
 
 // --- Governance Contracts ---
