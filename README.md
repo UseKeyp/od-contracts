@@ -11,6 +11,8 @@
   </a>
 </p>
 
+[![codecov](https://codecov.io/gh/open-dollar/od-contracts/graph/badge.svg?token=SDTNS69Q36)](https://codecov.io/gh/open-dollar/od-contracts)
+
 This repository contains the core smart contract code for Open Dollar.
 
 # Resources
