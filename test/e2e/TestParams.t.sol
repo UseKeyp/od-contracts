@@ -99,11 +99,19 @@ abstract contract TestParams is Contracts, Params {
     for (uint256 _i; _i < collateralTypes.length; _i++) {
       bytes32 _cType = collateralTypes[_i];
 
-      _oracleRelayerCParams[_cType] = IOracleRelayer.OracleRelayerCollateralParams({
-        oracle: delayedOracle[_cType],
-        safetyCRatio: 1.35e27, // 135%
-        liquidationCRatio: 1.25e27 // 125%
-      });
+      if (_cType != ARB) {
+        _oracleRelayerCParams[_cType] = IOracleRelayer.OracleRelayerCollateralParams({
+          oracle: delayedOracle[_cType],
+          safetyCRatio: 1.35e27, // 135%
+          liquidationCRatio: 1.25e27 // 125%
+        });
+      } else {
+        _oracleRelayerCParams[ARB] = IOracleRelayer.OracleRelayerCollateralParams({
+          oracle: delayedOracle[ARB],
+          safetyCRatio: 1.85e27, // 185%
+          liquidationCRatio: 1.75e27 // 175%
+        });
+      }
 
       _taxCollectorCParams[_cType] = ITaxCollector.TaxCollectorCollateralParams({
         // NOTE: 5%/yr => 1.05^(1/yr) = 1 + 1.54713e-9
